@@ -89,7 +89,9 @@ index = {filename:replicate('<empty>',N),   $
           exptime:fltarr(N),   $
          numpixels:lonarr(N), $
          channels:uintarr(N,4), $
-         chansize:lonarr(N,4) }
+         chansize:lonarr(N,4) , $
+	temp_lower:replicate('<empty>',N), $
+	temp_upper:replicate('<empty>',N)}
 
 
 ;var = oExposureList->Item(0)
@@ -106,6 +108,8 @@ for i=0, N-1 do begin
    index.date[i] = oExp->tagtext('DATE')                   ;Date
    index.exptime[i] = float( oExp->tagtext('DURATION') )   ;Exposure Duration
    index.numpixels[i] = ULONG(oExp->tagtext('PIXELS'))     ;pixels
+	index.temp_lower[i] = oExp->tagtext('ROE_TEMP_LOWER')	;temp_lower
+	index.temp_upper[i] = oExp->tagtext('ROE_TEMP_UPPER')	;temp_upper
 
 ;check which channels are recorded:
 ;print, oExp->tagtext('CHANNELS')
