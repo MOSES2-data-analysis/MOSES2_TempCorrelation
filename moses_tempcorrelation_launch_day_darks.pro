@@ -1,8 +1,8 @@
-pro moses_tempcorrelation
+pro moses_tempcorrelation_launch_day_darks
 
 		Nx=2048
 		Ny=1024
-	index=mxml2('imageindex.xml','/disk/data/kankel/MOSES2flight')
+	index=mxml2('imageindex.xml','/disk/data/kankel/MOSEStest/launch_day_darks_08-27-15/')
 	N_images=n_elements(index.filename)
   for i=0, N_images-1 do begin
 	if (strpos(index.seqname[i],'dark') ne -1) then begin
@@ -11,27 +11,29 @@ pro moses_tempcorrelation
     endif
   endfor
 	Nexptimes = n_elements(exp_list)
-	Ndarks = 6
+	;Ndarks = 20
+	Ndarks = N_images
+	print, Ndarks
 	;Ndarks = n_elements(dark_list)
-  darks_minus = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
-  darks_zero  = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
-  darks_plus  = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
+  ;darks_minus = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
+  ;darks_zero  = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
+  ;darks_plus  = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
 	median_minus=fltarr(Ndarks)
 	median_zero=fltarr(Ndarks)
 	median_plus=fltarr(Ndarks)
 	temp_lower=fltarr(Ndarks)
 	temp_upper=fltarr(Ndarks)
   for j = 0, Ndarks-1 do begin
-    i = dark_list[j]
+    i = j
     error=0L
     moses2_read, index.filename[i],minus,zero,plus,noise,          $
-      directory='/disk/data/kankel/MOSES2flight', error=error, $
+      directory='/disk/data/kankel/MOSEStest/launch_day_darks_08-27-15/', error=error, $
       byteorder=byteorder
 	print, index.filename[i]
 	;print, index.temp_lower[i]
-	darks_minus[*,*,j]=minus
-	darks_zero[*,*,j]=zero
-	darks_plus[*,*,j]=plus
+	;darks_minus[*,*,j]=minus
+	;darks_zero[*,*,j]=zero
+	;darks_plus[*,*,j]=plus
 	median_minus[j]=median(minus)
 	median_zero[j]=median(zero)
 	median_plus[j]=median(plus)
