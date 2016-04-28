@@ -11,13 +11,10 @@ pro moses_tempcorrelation_launch_day_darks
     endif
   endfor
 	Nexptimes = n_elements(exp_list)
-	;Ndarks = 20
+	;Ndarks = 5
 	Ndarks = N_images
 	print, Ndarks
 	;Ndarks = n_elements(dark_list)
-  ;darks_minus = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
-  ;darks_zero  = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
-  ;darks_plus  = fltarr(Nx, Ny, Ndarks) ;array of darks (DN)
 	median_minus=fltarr(Ndarks)
 	median_zero=fltarr(Ndarks)
 	median_plus=fltarr(Ndarks)
@@ -40,7 +37,9 @@ pro moses_tempcorrelation_launch_day_darks
 	temp_lower[j]=index.temp_lower[i]
 	temp_upper[j]=index.temp_upper[i]
 	endfor
-	plot, temp_lower,median_minus,YRANGE=[300,600]
+	window,0
+	loadct, 39
+	plot, temp_lower,median_minus,YRANGE=[300,600], psym=1, color=85, title='ROE Lower Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)'
 	minus_lower_coef=CORRELATE(temp_lower,median_minus)
 	minus_upper_coef=CORRELATE(temp_upper,median_minus)
 	zero_lower_coef=CORRELATE(temp_lower,median_zero)
@@ -53,8 +52,14 @@ pro moses_tempcorrelation_launch_day_darks
 	print, "the plus, upper coefficient is: ",plus_upper_coef
 	print, "the zero, lower coefficient is: ",zero_lower_coef
 	print, "the zero, upper coefficient is: ",zero_upper_coef
-	oplot, temp_lower,median_zero
-	oplot, temp_lower,median_plus
+	oplot, temp_lower,median_zero, psym=2, color=100
+	oplot, temp_lower,median_plus, psym=4, color=150
+	al_legend, ['Minus','Zero','Plus'],psym=[1,2,4],color=[85,100,150]
+	window,1
+	plot, temp_upper,median_minus,YRANGE=[300,600], psym=1, color=85, title='ROE Upper Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)'
+	oplot, temp_upper,median_zero, psym=2, color=100
+	oplot, temp_upper,median_plus, psym=4, color=150
+	al_legend, ['Minus','Zero','Plus'],psym=[1,2,4],color=[85,100,150]
 end
   
 
