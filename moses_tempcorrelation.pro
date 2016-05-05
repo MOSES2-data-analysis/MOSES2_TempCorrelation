@@ -1,9 +1,20 @@
-pro moses_tempcorrelation, directory
-
-	foo[0]='flight_test2_07-25-15'
+pro moses_tempcorrelation
+	
+	directory='/disk/data/kankel/MOSEStest/'
+	foo=['flight_test2_07-25-15','flight_test2_07-26-15','flight_test2_07-27-15','flight_test2_07-29-15','flight_test3_07-26-15','flight_test3_07-27-15']
+	
+;flight_test3_07-29-15/
+;flight_test4_07-26-15/
+;flight_test_07-25-15/
+;flight_test_07-26-15/
+;flight_test_07-27-15/
+;flight_test_07-29-15/
+;flight_test_7-23-15/
+	for k=0, n_elements(foo)-1 do begin
 		Nx=2048
 		Ny=1024
-	index=mxml2('imageindex.xml',directory)
+	print, directory,foo[k]
+	index=mxml2('imageindex.xml',directory+foo[k])
 	N_images=n_elements(index.filename)
   for i=0, N_images-1 do begin
 	if (strpos(index.seqname[i],'dark') ne -1) then begin
@@ -23,10 +34,10 @@ pro moses_tempcorrelation, directory
 	temp_lower=fltarr(Ndarks)
 	temp_upper=fltarr(Ndarks)
   for j = 0, Ndarks-1 do begin
-    i = j
+    i = dark_list[j]
     error=0L
     moses2_read, index.filename[i],minus,zero,plus,noise,          $
-      directory=directory, error=error, $
+      directory=directory+foo[k], error=error, $
       byteorder=byteorder
 	print, index.filename[i]
 	;print, index.temp_lower[i]
@@ -39,31 +50,45 @@ pro moses_tempcorrelation, directory
 	temp_lower[j]=index.temp_lower[i]
 	temp_upper[j]=index.temp_upper[i]
 	endfor
+	if n_elements(total_median_zero) eq 0 then begin
+		total_median_minus=median_minus
+		total_median_zero=median_zero
+		total_median_plus=median_plus
+		total_temp_lower=temp_lower
+		total_temp_upper=temp_upper
+	endif else begin
+		total_median_minus=total_median_minus+median_minus
+		total_median_zero=total_median_zero+median_zero
+		total_median_plus=total_median_plus+median_plus
+		total_temp_lower=total_temp_lower+temp_lower
+		total_temp_upper=total_temp_upper+temp_upper
+	endelse
+	endfor
 	window,0
 	loadct,39
-	minus_lower_fit=linfit(temp_lower,median_minus)
-	minus_upper_fit=linfit(temp_upper,median_minus)
-	zero_lower_fit=linfit(temp_lower,median_zero)
-	zero_upper_fit=linfit(temp_upper,median_zero)
-	plus_lower_fit=linfit(temp_lower,median_plus)
-	plus_upper_fit=linfit(temp_upper,median_plus)
+	minus_lower_fit=linfit(total_temp_lower,total_median_minus)
+	minus_upper_fit=linfit(total_temp_upper,total_median_minus)
+	zero_lower_fit=linfit(total_temp_lower,total_median_zero)
+	zero_upper_fit=linfit(total_temp_upper,total_median_zero)
+	plus_lower_fit=linfit(total_temp_lower,total_median_plus)
+	plus_upper_fit=linfit(total_temp_upper,total_median_plus)
 	x = findgen(40)
 	;plot, temp_lower,median_minus, psym=1, color=85, title='ROE Lower Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)', /ynozero
-	plot, temp_lower,median_minus, YRANGE=[300,1000], psym=1, color=85, title='ROE Lower Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)'
-	minus_lower_coef=CORRELATE(temp_lower,median_minus)
-	minus_upper_coef=CORRELATE(temp_upper,median_minus)
-	zero_lower_coef=CORRELATE(temp_lower,median_zero)
-	zero_upper_coef=CORRELATE(temp_upper,median_zero)
-	plus_lower_coef=CORRELATE(temp_lower,median_plus)
-	plus_upper_coef=CORRELATE(temp_upper,median_plus)
+	plot, total_temp_lower,total_median_minus, YRANGE=[300,1000], psym=1, color=85, title='ROE Lower Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)'
+	minus_lower_coef=CORRELATE(total_temp_lower,total_median_minus)
+	minus_upper_coef=CORRELATE(total_temp_upper,total_median_minus)
+	zero_lower_coef=CORRELATE(total_temp_lower,total_median_zero)
+	zero_upper_coef=CORRELATE(total_temp_upper,total_median_zero)
+	plus_lower_coef=CORRELATE(total_temp_lower,total_median_plus)
+	plus_upper_coef=CORRELATE(total_temp_upper,total_median_plus)
 	print, "the minus, lower coefficient is: ",minus_lower_coef
 	print, "the minus, upper coefficient is: ",minus_upper_coef
 	print, "the plus, lower coefficient is: ",plus_lower_coef
 	print, "the plus, upper coefficient is: ",plus_upper_coef
 	print, "the zero, lower coefficient is: ",zero_lower_coef
 	print, "the zero, upper coefficient is: ",zero_upper_coef
-	oplot, temp_lower,median_zero, psym=2, color=100
-	oplot, temp_lower,median_plus, psym=4, color=150
+	oplot, total_temp_lower,total_median_zero, psym=2, color=100
+	oplot, total_temp_lower,total_median_plus, psym=4, color=150
 	oplot, x, minus_lower_fit[0] + minus_lower_fit[1]*x, color=85
 	;oplot, x, minus_upper_fit[0] + minus_upper_fit[1]*x, color=85
 	oplot, x, zero_lower_fit[0] + zero_lower_fit[1]*x, color=100
@@ -79,9 +104,9 @@ pro moses_tempcorrelation, directory
 	print, 'the plus, lower line of best fit is:',plus_lower_fit[1], "x + ", plus_lower_fit[0]
 	print, 'the plus, upper line of best fit is:',plus_upper_fit[1], "x + ", plus_upper_fit[0]
 	;plot, temp_upper,median_minus, psym=1, color=85, title='ROE Upper Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)', /ynozero
-	plot, temp_upper,median_minus, YRANGE=[300,1000], psym=1, color=85, title='ROE Upper Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)'
-	oplot, temp_upper,median_zero, psym=2, color=100
-	oplot, temp_upper,median_plus, psym=4, color=150
+	plot, total_temp_upper,total_median_minus, YRANGE=[300,1000], psym=1, color=85, title='ROE Upper Temp vs. Pedestal Value', ytitle='Median Dark Exposure Value', xtitle='Temperature (C)'
+	oplot, total_temp_upper,total_median_zero, psym=2, color=100
+	oplot, total_temp_upper,total_median_plus, psym=4, color=150
 	oplot, x, minus_upper_fit[0] + minus_upper_fit[1]*x, color=85
 	oplot, x, zero_upper_fit[0] + zero_upper_fit[1]*x, color=100
 	oplot, x, plus_upper_fit[0] + plus_upper_fit[1]*x, color=150
